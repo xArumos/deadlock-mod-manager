@@ -1,8 +1,10 @@
 import { toast } from "@deadlock-mods/ui/components/sonner";
 import { listen } from "@tauri-apps/api/event";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { DownloadProgressEvent } from "@/lib/download/manager";
 import logger from "@/lib/logger";
+import { getBatchUpdateOverallProgress } from "@/lib/mods/update-progress";
 import { usePersistedStore } from "@/lib/store";
 import { BatchUpdateResultSchema } from "@/lib/validation/batch-update";
 import type {
@@ -33,25 +35,57 @@ export const useBatchUpdate = () => {
     maxBackupCount,
   } = usePersistedStore();
 
+  // Mod ids in the running batch, used to pick out their download events.
+  const batchModIds = useRef<Set<string>>(new Set());
+
   useEffect(() => {
-    const unlistenPromise = listen<BatchUpdateProgressEvent>(
+    const unlistenBatchPromise = listen<BatchUpdateProgressEvent>(
       "batch-update-progress",
       (event) => {
         const progress = event.payload;
+        const isDownloading = progress.currentStep === "downloading";
         setUpdateProgress({
           currentStep: progress.currentStep,
           currentMod: progress.currentModName || undefined,
           completedMods: progress.currentModIndex,
           totalMods: progress.totalMods,
           overallProgress: progress.overallProgress,
-          isDownloading: progress.currentStep === "downloading",
+          downloadPercentage: isDownloading ? 0 : undefined,
+          isDownloading,
           isInstalling: progress.currentStep === "installing",
         });
       },
     );
 
+    const unlistenDownloadPromise = listen<DownloadProgressEvent>(
+      "download-progress",
+      (event) => {
+        if (!batchModIds.current.has(event.payload.modId)) return;
+
+        const downloadPercentage = Math.round(event.payload.percentage);
+        setUpdateProgress((previous) => {
+          if (
+            !previous?.isDownloading ||
+            previous.downloadPercentage === downloadPercentage
+          ) {
+            return previous;
+          }
+          return {
+            ...previous,
+            downloadPercentage,
+            overallProgress: getBatchUpdateOverallProgress({
+              completedMods: previous.completedMods,
+              totalMods: previous.totalMods,
+              downloadPercentage,
+            }),
+          };
+        });
+      },
+    );
+
     return () => {
-      unlistenPromise.then((unlisten) => unlisten());
+      unlistenBatchPromise.then((unlisten) => unlisten());
+      unlistenDownloadPromise.then((unlisten) => unlisten());
     };
   }, []);
 
@@ -171,6 +205,7 @@ export const useBatchUpdate = () => {
         isMap: um.mod.isMap,
       };
     });
+    batchModIds.current = new Set(batchUpdateMods.map((m) => m.modId));
 
     try {
       const rawResult = await invokeGuarded("batch_update_mods", {
@@ -239,6 +274,8 @@ export const useBatchUpdate = () => {
       logger.withError(error).error("Batch mod update failed");
       setUpdateProgress(null);
       throw error;
+    } finally {
+      batchModIds.current = new Set();
     }
   };
 

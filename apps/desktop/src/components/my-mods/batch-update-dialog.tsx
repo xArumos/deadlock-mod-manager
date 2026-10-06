@@ -108,6 +108,10 @@ export const BatchUpdateDialog = ({
             <div className='flex items-center justify-between'>
               <span className='text-sm font-medium capitalize flex items-center gap-2'>
                 {updateProgress.currentStep}{" "}
+                {updateProgress.downloadPercentage !== undefined &&
+                  t("downloads.percentage", {
+                    percentage: updateProgress.downloadPercentage,
+                  })}
                 {updateProgress.currentStep === "downloading" && (
                   <Loader2 className='size-3.5 animate-spin' />
                 )}
