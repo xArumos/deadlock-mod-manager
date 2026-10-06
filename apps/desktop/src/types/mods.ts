@@ -176,6 +176,7 @@ export interface UpdateProgress {
   completedMods: number;
   totalMods: number;
   overallProgress: number;
+  downloadPercentage?: number;
   isDownloading: boolean;
   isInstalling: boolean;
 }
