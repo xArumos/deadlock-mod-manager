@@ -14,9 +14,9 @@ pub mod export;
 pub mod format;
 pub mod grimoire;
 pub mod hash_cache;
-mod reconcile;
 pub mod import;
 pub mod ledger;
+mod reconcile;
 
 use super::state::MANAGER;
 use crate::app_runtime::AppHandle;
@@ -144,10 +144,15 @@ pub async fn read_interchange_source(
   location: Option<String>,
 ) -> Result<format::InterchangeDocument, Error> {
   let game_path = dmm_game_path();
-  let app_data = lock_manager()?.get_app_local_data_path().ok();
+  let (app_data, dmm_store) = {
+    let manager = lock_manager()?;
+    (
+      manager.get_app_local_data_path().ok(),
+      manager.get_mods_store_path().ok(),
+    )
+  };
   blocking(move || {
     let hashes = hash_cache::HashCache::open(app_data.as_deref());
-    let dmm_store = app_data.as_ref().map(|dir| dir.join("mods"));
     let progress = |current: usize, total: usize, name: &str| {
       let payload = ReadProgress {
         current,
@@ -327,12 +332,13 @@ pub async fn relabel_interchange_mod(from: String, to: String) -> Result<(), Err
   blocking(move || {
     let manager = lock_manager()?;
     let app_data = manager.get_app_local_data_path()?;
+    let mods_store = manager.get_mods_store_path()?;
     let game_path = manager
       .get_steam_manager()
       .get_game_path()
       .cloned()
       .ok_or(Error::GamePathNotSet)?;
-    super::identity_migration::relabel_mod_on_disk(&app_data, &game_path, &from, &to)?;
+    super::identity_migration::relabel_mod_on_disk(&mods_store, &game_path, &from, &to)?;
     let mut entries = ledger::load(&app_data);
     ledger::relabel(&mut entries, &from, &to);
     ledger::save(&app_data, &entries)

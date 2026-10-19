@@ -32,7 +32,7 @@ export type RuntimeBootstrap = {
 let runtimeBootstrapPromise: Promise<RuntimeBootstrap> | null = null;
 let runtimeBootstrap: RuntimeBootstrap | null = null;
 
-export const getRuntimeBootstrap = (): Promise<RuntimeBootstrap> => {
+const getRuntimeBootstrap = (): Promise<RuntimeBootstrap> => {
   runtimeBootstrapPromise ??= invoke<RuntimeBootstrap>(
     "get_runtime_bootstrap",
   ).then((bootstrap) => {

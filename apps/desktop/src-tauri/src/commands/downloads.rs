@@ -42,10 +42,7 @@ pub async fn queue_download(
   )
   .await?;
 
-  let app_local_data_dir =
-    crate::runtime_environment::app_local_data_dir(&app_handle).map_err(Error::Tauri)?;
-
-  let target_dir = app_local_data_dir.join("mods").join(&mod_id);
+  let target_dir = super::mods_store::current_store(&app_handle)?.join(&mod_id);
 
   let task = DownloadTask {
     mod_id,

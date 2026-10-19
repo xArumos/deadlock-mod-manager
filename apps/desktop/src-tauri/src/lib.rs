@@ -196,6 +196,8 @@ pub fn run() {
       let app_data_dir = runtime_environment::app_local_data_dir(app.handle())?;
       mod_manager::perf_config::catalog::load_cached(&app_data_dir);
       mod_manager::perf_config::staging::cleanup_stale(&app_data_dir);
+      let mods_store = mod_manager::mods_store::restore(&app_data_dir);
+      commands::mods_store::allow_renderer_access(app.handle(), &mods_store);
       app.manage(commands::policy::PolicyState::open(
         runtime_environment::app_local_data_dir(app.handle())?.join("policy-manifest-v1.json"),
       ));
@@ -241,6 +243,8 @@ pub fn run() {
       commands::game::set_game_path,
       commands::game::set_steam_path,
       commands::game::clear_steam_path,
+      commands::mods_store::get_mods_store_path,
+      commands::mods_store::resolve_mods_store_path,
       commands::mods::get_mod_file_tree,
       commands::mods::install_mod,
       commands::game::stop_game,

@@ -58,6 +58,7 @@ import { CrashCheckToggle } from "@/components/settings/crash-check-toggle";
 import { GameGuardToggle } from "@/components/settings/game-guard-toggle";
 import { GamePathSettings } from "@/components/settings/game-path-settings";
 import { SteamPathSettings } from "@/components/settings/steam-path-settings";
+import { DownloadPathSettings } from "@/components/settings/download-path-settings";
 import { GamePresenceSettings } from "@/components/settings/game-presence-settings";
 import GameInfoManagement from "@/components/settings/gameinfo-management";
 import { AutoResetGameinfoToggle } from "@/components/settings/auto-reset-gameinfo-toggle";
@@ -731,6 +732,13 @@ const CustomSettings = ({ value }: { value?: string }) => {
               searchId='steam-path'
               title={t("settings.steamPath")}>
               <SteamPathSettings />
+            </Section>
+
+            <Section
+              description={t("settings.downloadPathDescription")}
+              searchId='download-path'
+              title={t("settings.downloadPath")}>
+              <DownloadPathSettings />
             </Section>
 
             <Section

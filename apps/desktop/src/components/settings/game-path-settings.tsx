@@ -8,6 +8,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import logger from "@/lib/logger";
+import { followGameDrive } from "@/lib/mods-store";
 import { usePersistedStore } from "@/lib/store";
 
 export const GamePathSettings = () => {
@@ -30,6 +31,7 @@ export const GamePathSettings = () => {
         const path = await invoke<string>("set_game_path", { path: selected });
         setGamePath(path);
         toast.success(t("settings.gamePathSet"));
+        await followGameDrive();
       }
     } catch (error) {
       logger.errorOnly(error);
@@ -45,6 +47,7 @@ export const GamePathSettings = () => {
       const path = await invoke<string>("find_game_path");
       setGamePath(path);
       toast.success(t("settings.gamePathAutoDetected"));
+      await followGameDrive();
     } catch (error) {
       logger.errorOnly(error);
       toast.error(t("settings.invalidGamePath"));

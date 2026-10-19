@@ -27,6 +27,7 @@ pub mod logs;
 pub mod match_sync;
 pub mod mod_interchange;
 pub mod mods;
+pub mod mods_store;
 pub mod performance;
 pub mod policy;
 pub mod profile_snapshot;

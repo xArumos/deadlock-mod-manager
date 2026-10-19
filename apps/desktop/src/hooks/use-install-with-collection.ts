@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { appLocalDataDir, join } from "@tauri-apps/api/path";
+import { join } from "@tauri-apps/api/path";
 import { useState } from "react";
 import { createLogger } from "@/lib/logger";
 import {
@@ -11,6 +11,7 @@ import type { InstallAnalyticsOptions } from "@/lib/analytics/install";
 import { getErrorMessage } from "@/lib/errors";
 import { syncInstalledVpksFromManifest } from "@/lib/mods/sync-installed-vpks";
 import { isTauriError } from "@/types/tauri";
+import { getModsStorePath } from "@/lib/mods-store";
 import { usePersistedStore } from "@/lib/store";
 import type {
   InstallableMod,
@@ -260,10 +261,7 @@ const useInstallWithCollection = (): UseInstallWithCollectionReturn => {
       let fileTree: ModFileTree | null = null;
 
       try {
-        // Construct mod directory path
-        const base = await appLocalDataDir();
-        const modsRoot = await join(base, "mods");
-        const modDir = await join(modsRoot, mod.remoteId);
+        const modDir = await join(await getModsStorePath(), mod.remoteId);
 
         logger
           .withMetadata({ modId: mod.remoteId, modPath: modDir })
