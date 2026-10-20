@@ -16,7 +16,7 @@ pub async fn stop_forge_bridge() -> Result<(), Error> {
 
 /// Kept out of the renderer: bytes cross the IPC boundary as a JSON number
 /// array, so a large sound build would cost gigabytes there. Unguarded: the
-/// payload lands in app data, and the later install into the game is guarded.
+/// payload lands in the mods store, and the later install into the game is guarded.
 #[tauri::command]
 pub async fn place_forge_payload(
   app_handle: AppHandle,
@@ -24,9 +24,7 @@ pub async fn place_forge_payload(
   destination: String,
 ) -> Result<(), Error> {
   let staged = forge_bridge::peek_staged(&path)?;
-  let mods_root = crate::runtime_environment::app_local_data_dir(&app_handle)
-    .map_err(Error::Tauri)?
-    .join("mods");
+  let mods_root = super::mods_store::current_store(&app_handle)?;
   let destination = contained_destination(&mods_root, &destination)?;
 
   if let Some(parent) = destination.parent() {

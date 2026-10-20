@@ -1,7 +1,7 @@
 //! Importer: interchange document -> DMM profile.
 //!
 //! Each mod ends up exactly where DMM's own download path would put it:
-//! - its VPKs are kept in the mod store (`<app data>/mods/<id>/files`) so DMM
+//! - its VPKs are kept in the mod store (`<mods store>/<id>/files`) so DMM
 //!   can re-enable or restore them later,
 //! - the selected VPKs are parked in the profile as `<id>_<name>.vpk` and
 //!   recorded as disabled in `.dmm.json`,
@@ -446,19 +446,20 @@ pub fn import(
   progress: &dyn Fn(ImportProgress),
 ) -> Result<InterchangeImportReport, Error> {
   let app_data = manager.get_app_local_data_path()?;
-  import_into(manager, &app_data, request, progress)
+  let store = manager.get_mods_store_path()?;
+  import_into(manager, &app_data, &store, request, progress)
 }
 
-/// [`import`] with DMM's app data folder (ledger and mod store) given.
+/// [`import`] with DMM's app data folder (ledger) and mod store given.
 pub fn import_into(
   manager: &mut ModManager,
   app_data: &Path,
+  store: &Path,
   request: InterchangeImportRequest,
   progress: &dyn Fn(ImportProgress),
 ) -> Result<InterchangeImportReport, Error> {
   let base = manager.get_addons_path(request.profile_folder.as_deref())?;
   fs::create_dir_all(base.path())?;
-  let store = app_data.join("mods");
   let hashes = HashCache::open(Some(app_data));
   let mut ledger = super::ledger::load(app_data);
   let source_manager = if request.document.source.manager.is_empty() {
@@ -483,7 +484,7 @@ pub fn import_into(
     .collect();
   entries.sort_by_key(|entry| entry.order);
 
-  super::reconcile::reconcile_imported_files(&base, &store, &hashes)?;
+  super::reconcile::reconcile_imported_files(&base, store, &hashes)?;
   let existing = ProfileVpkManifest::load(&base)?;
   let mut known: HashSet<String> = request.known_mod_ids.iter().cloned().collect();
   known.extend(existing.mods.keys().cloned());

@@ -5,7 +5,7 @@ import {
 } from "@deadlock-mods/hero-parser";
 import { toast } from "@deadlock-mods/ui/components/sonner";
 import { invoke } from "@tauri-apps/api/core";
-import { appLocalDataDir, join } from "@tauri-apps/api/path";
+import { join } from "@tauri-apps/api/path";
 import { BaseDirectory, readDir } from "@tauri-apps/plugin-fs";
 import JSZip from "jszip";
 import { useTranslation } from "react-i18next";
@@ -26,7 +26,7 @@ import {
   writeFileText,
 } from "@/lib/file-utils";
 import logger from "@/lib/logger";
-import { getRuntimeBootstrap } from "@/lib/runtime-bootstrap";
+import { getModsStorePath } from "@/lib/mods-store";
 import { usePersistedStore } from "@/lib/store";
 import { ModStatus, type ModFileTree } from "@/types/mods";
 import { invokeGuarded } from "@/lib/game-guard";
@@ -178,9 +178,7 @@ export const useModProcessor = () => {
     setProcessing(true, t("addMods.validatingMetadata"));
 
     const modId = `local-${crypto.randomUUID()}`;
-    const base =
-      (await getRuntimeBootstrap()).appDataPath ?? (await appLocalDataDir());
-    const modsRoot = await join(base, "mods");
+    const modsRoot = await getModsStorePath();
     const modDir = await join(modsRoot, modId);
     const filesDir = await join(modDir, "files");
 
@@ -347,9 +345,7 @@ export const useModProcessor = () => {
     setProcessing(true, t("addMods.validatingMetadata"));
 
     const modId = `local-${crypto.randomUUID()}`;
-    const base =
-      (await getRuntimeBootstrap()).appDataPath ?? (await appLocalDataDir());
-    const modsRoot = await join(base, "mods");
+    const modsRoot = await getModsStorePath();
     const modDir = await join(modsRoot, modId);
 
     setProcessing(true, t("addMods.creatingDirectories"));

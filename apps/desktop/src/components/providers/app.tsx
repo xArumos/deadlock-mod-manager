@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { createContext, useContext, useEffect, useMemo } from "react";
 import logger from "@/lib/logger";
 import { notifyRemovedMods } from "@/lib/mods/missing-vpks";
+import { followGameDrive, resolveModsStorePath } from "@/lib/mods-store";
 import { usePersistedStore } from "@/lib/store";
 
 type AppProviderProps = {
@@ -81,6 +82,24 @@ export const AppProvider = ({ children, ...props }: AppProviderProps) => {
       }
     };
 
+    // Needs the game path, since by default the store follows the game.
+    const resolveModsStore = async () => {
+      const { useCustomDownloadPath, downloadPath, setUseCustomDownloadPath } =
+        usePersistedStore.getState();
+      if (useCustomDownloadPath) {
+        try {
+          await resolveModsStorePath(downloadPath);
+          return;
+        } catch (error) {
+          logger
+            .withError(error)
+            .warn("Custom download folder is unavailable, using the default");
+          setUseCustomDownloadPath(false);
+        }
+      }
+      await followGameDrive();
+    };
+
     const migrateSubmissionIdentities = async () => {
       const { pendingIdentityMigrations, completeIdentityMigrations } =
         usePersistedStore.getState();
@@ -97,7 +116,7 @@ export const AppProvider = ({ children, ...props }: AppProviderProps) => {
         .info("Completed persisted submission identity migration");
     };
 
-    Promise.all([resolveGamePath(), resolveSteamPath()])
+    Promise.all([resolveGamePath().then(resolveModsStore), resolveSteamPath()])
       .then(migrateSubmissionIdentities)
       .then(cleanupStaleServerGameinfo)
       .then(() => usePersistedStore.getState().restoreModsFromManifest())

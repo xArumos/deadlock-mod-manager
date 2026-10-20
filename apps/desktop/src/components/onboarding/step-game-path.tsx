@@ -10,6 +10,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import logger from "@/lib/logger";
+import { followGameDrive } from "@/lib/mods-store";
 import { usePersistedStore } from "@/lib/store";
 
 type GamePathStepProps = {
@@ -32,6 +33,7 @@ export const OnboardingStepGamePath = ({ onComplete }: GamePathStepProps) => {
       setGamePath(path);
       setDetectionState("success");
       logger.withMetadata({ path }).info("Game path auto-detected");
+      await followGameDrive();
     } catch (error) {
       logger.withError(error).error("Failed to auto-detect game path");
       setDetectionState("error");
@@ -55,6 +57,7 @@ export const OnboardingStepGamePath = ({ onComplete }: GamePathStepProps) => {
           setGamePath(path);
           setDetectionState("success");
           logger.withMetadata({ path }).info("Game path manually set");
+          await followGameDrive();
         } catch (error) {
           logger.withError(error).error("Invalid game path selected");
           setDetectionState("error");

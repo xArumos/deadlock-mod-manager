@@ -8,6 +8,12 @@ export type GameState = {
   steamPath: string;
   setUseCustomSteamPath: (enabled: boolean) => void;
   setSteamPath: (path: string) => void;
+  /** Off: the mods store sits on the game's drive, or in app data as a fallback. */
+  useCustomDownloadPath: boolean;
+  /** Folder the user picked; the store lives in a subfolder of it. */
+  downloadPath: string;
+  setUseCustomDownloadPath: (enabled: boolean) => void;
+  setDownloadPath: (path: string) => void;
   /** Steam build id the user has already been told about. */
   knownGameBuildId: number | null;
   setKnownGameBuildId: (buildId: number) => void;
@@ -33,6 +39,15 @@ export const createGameSlice: StateCreator<State, [], [], GameState> = (
         : { useCustomSteamPath: false, steamPath: "" },
     ),
   setSteamPath: (path: string) => set({ steamPath: path }),
+  useCustomDownloadPath: false,
+  downloadPath: "",
+  setUseCustomDownloadPath: (enabled: boolean) =>
+    set(
+      enabled
+        ? { useCustomDownloadPath: true }
+        : { useCustomDownloadPath: false, downloadPath: "" },
+    ),
+  setDownloadPath: (path: string) => set({ downloadPath: path }),
   knownGameBuildId: null,
   setKnownGameBuildId: (buildId: number) => set({ knownGameBuildId: buildId }),
   lastLaunchVanilla: false,

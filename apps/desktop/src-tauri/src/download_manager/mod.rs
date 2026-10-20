@@ -1185,6 +1185,11 @@ impl DownloadManager {
     Ok(())
   }
 
+  /// True while a download is queued or the worker is still processing one.
+  pub async fn is_busy(&self) -> bool {
+    *self.processing.lock().await || !self.queue.lock().await.is_empty()
+  }
+
   pub async fn get_download_status(&self, mod_id: &str) -> Result<Option<DownloadStatus>, Error> {
     let active = self.active_downloads.lock().await;
     Ok(active.get(mod_id).map(|download| DownloadStatus {

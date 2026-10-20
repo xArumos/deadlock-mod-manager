@@ -1,6 +1,6 @@
 import { toast } from "@deadlock-mods/ui/components/sonner";
 import { invoke } from "@tauri-apps/api/core";
-import { appLocalDataDir, join } from "@tauri-apps/api/path";
+import { join } from "@tauri-apps/api/path";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import useInstallWithCollection from "@/hooks/use-install-with-collection";
@@ -13,6 +13,7 @@ import {
   pickRandomOutcome,
   randomizerPool,
 } from "@/lib/mods/skin-randomizer";
+import { getModsStorePath } from "@/lib/mods-store";
 import { usePersistedStore } from "@/lib/store";
 import { type LocalMod, type ModFileTree, ModStatus } from "@/types/mods";
 
@@ -27,7 +28,7 @@ const silentFileTree = async (mod: LocalMod): Promise<ModFileTree | null> => {
   if (mod.installedFileTree) {
     return mod.installedFileTree;
   }
-  const modDir = await join(await appLocalDataDir(), "mods", mod.remoteId);
+  const modDir = await join(await getModsStorePath(), mod.remoteId);
   const tree = await invoke<ModFileTree>("get_mod_file_tree", {
     modPath: modDir,
   });
